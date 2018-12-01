@@ -4,6 +4,7 @@ import pywikibot
 from pywikibot import pagegenerators
 import os
 import re
+import datetime
 import yaml
 
 # TODO: Replace IDs in retracted templates with the retracted DOI, not the original DOI.
@@ -53,7 +54,35 @@ def load_identifier_templates():
 
 def load_retracted_identifiers():
     # TODO: This data, in the database, should have type, identifier, and original identifier.
+    # This return is purely placeholder for testing.
     return [['doi', '10.783947932473298/dth.12107']]
+
+
+def find_page_cites(page_text, id):
+    """
+    Given some page text and an identifier, finds all <ref> tags containing
+    that identifier. Returns a list.
+    """
+    soup = BeautifulSoup(page_text, 'html.parser')
+    page_cites = soup.find_all("ref", string=re.compile('.*{id}.*'.format(
+        id=id
+    )))
+    return page_cites
+
+
+def get_edit_summary(cites_added):
+    """
+    Given a list of citations added to a page, returns a singular
+    or plural edit summary.
+    """
+    edit_summary_template = "Flagging {num_sources} as retracted."
+    if cites_added == 1:
+        edit_summary = edit_summary_template.format(
+            num_sources="1 source")
+    else:
+        edit_summary = edit_summary_template.format(
+            num_sources=str(cites_added) + " sources")
+    return edit_summary
 
 
 def run_bot():
@@ -82,19 +111,19 @@ def run_bot():
                 print(wp_page)
                 page_text = wp_page.text
 
-                soup = BeautifulSoup(page_text, 'html.parser')
-                page_cites = soup.find_all("ref", string=re.compile('.*{id}.*'.format(
-                    id=identifier[1]
-                )))
+                page_cites = find_page_cites(page_text, identifier[1])
                 num_cites_found = len(page_cites)
                 if num_cites_found == 0:
-                    print("Error: Couldn't find the identifier {id} inside"
-                          "<ref> tags on page {page}.".format(
-                            id=identifier[1],
-                            page=wp_page))
+                    logger.error("Error: Couldn't find the identifier {id} inside"
+                                 "<ref> tags on page {page}.".format(
+                                    id=identifier[1],
+                                    page=wp_page))
                     continue
 
                 for page_cite in page_cites:
+                    # Loop through each citation, updating the page text
+                    # for each - in case this identifier is cited multiple
+                    # times in a lazy and/or inconsistent way.
                     cite_str = page_cite.string
                     ref_to_insert = cite_str + " " + retracted_template
 
@@ -102,15 +131,18 @@ def run_bot():
                     cites_added += 1
 
                 wp_page.text = page_text
-                edit_summary_template = "Flagging {num_sources} as retracted."
-                if cites_added == 1:
-                    edit_summary = edit_summary_template.format(
-                        num_sources="1 source")
-                else:
-                    edit_summary = edit_summary_template.format(
-                        num_sources=str(cites_added) + " sources")
+                edit_summary = get_edit_summary(cites_added)
+
                 wp_page.save(edit_summary, minor=False)
+                logger.info("Successfully edited {page_name} with "
+                            "{num_sources} retracted source(s).".format(
+                                page_name=wp_page.title,
+                                num_sources=cites_added
+                            ))
 
 
 if __name__ == '__main__':
+    logger.info("Starting bot run at {dt}".format(
+        dt=datetime.datetime.now()
+    ))
     run_bot()
