@@ -1,0 +1,7 @@
+# Not sure what other per-ID info might be needed here. If extra info
+# isn't required per-ID, this can be simplified.
+
+doi:
+  template_name: DOI
+pmid:
+  template_name: PMID
