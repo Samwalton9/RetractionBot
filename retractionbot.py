@@ -7,12 +7,15 @@ import re
 import datetime
 import yaml
 
+from db import load_retracted_identifiers
+
 # TODO: Replace IDs in retracted templates with the retracted DOI, not the original DOI.
 
 directory = os.path.dirname(os.path.realpath(__file__))
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(filename=os.path.join(directory, 'retractionbot.log'),level=logging.INFO)
+logging.basicConfig(filename=os.path.join(directory, 'retractionbot.log'),
+                    level=logging.INFO)
 
 
 def check_bot_killswitch(site):
@@ -30,32 +33,20 @@ def check_bot_killswitch(site):
     if run_page.text == "yes":
         return True
     else:
-        log_text = "{run_page_name} not set to 'yes', not running.".format(
-            run_page_name=run_page_name
-        )
+        log_text = "{run_page_name} not set to 'yes' on {lang}.wikipedia,"
+        "not running.".format(
+            run_page_name=run_page_name,
+            lang=site.lang
+            )
         logger.error(log_text)
         return False
 
 
-def load_bot_languages():
+def load_bot_settings():
     """Returns the contents of bot_settings.yaml"""
     with open('bot_settings.yml') as bot_settings_file:
         loaded_yaml = yaml.load(bot_settings_file)
     return loaded_yaml
-
-
-def load_identifier_templates():
-    """Returns the contents of identifiers.yaml"""
-    with open('identifiers.yml') as identifier_templates:
-        templates_loaded = yaml.load(identifier_templates)
-
-    return templates_loaded
-
-
-def load_retracted_identifiers():
-    # TODO: This data, in the database, should have type, identifier, and original identifier.
-    # This return is purely placeholder for testing.
-    return [['doi', '10.783947932473298/dth.12107']]
 
 
 def find_page_cites(page_text, id):
@@ -86,9 +77,11 @@ def get_edit_summary(cites_added):
 
 
 def run_bot():
-    bot_languages = load_bot_languages()
+    bot_settings = load_bot_settings()
+    bot_languages = bot_settings['retracted_template_names']
+    identifier_templates = bot_settings['id_template_names']
     retracted_identifiers = load_retracted_identifiers()
-    identifier_templates = load_identifier_templates()
+
     template_template = '{{{{{template_name} |{{{{{id_template} |{id}}}}}}}}}'
 
     for language, lang_items in bot_languages.items():
@@ -100,45 +93,56 @@ def run_bot():
 
         for identifier in retracted_identifiers:
             retracted_template = template_template.format(
-                template_name=lang_items['retracted_template'],
-                id_template= identifier_templates[identifier[0]]['template_name'],
+                template_name=lang_items,
+                id_template=identifier_templates[identifier[0]],
                 id=identifier[1])
 
-            page_list = pagegenerators.SearchPageGenerator(identifier, namespaces=[2]) #TODO: Turn back to 0 when not testing in sandbox
+            # TODO: Turn back to 0 when not testing in sandbox
+            page_list = pagegenerators.SearchPageGenerator(identifier[2],
+                                                           namespaces=[2],
+                                                           site=site)
 
             cites_added = 0
             for wp_page in page_list:
                 print(wp_page)
                 page_text = wp_page.text
 
-                page_cites = find_page_cites(page_text, identifier[1])
+                page_cites = find_page_cites(page_text, identifier[2])
                 num_cites_found = len(page_cites)
                 if num_cites_found == 0:
                     logger.error("Error: Couldn't find the identifier {id} inside"
                                  "<ref> tags on page {page}.".format(
-                                    id=identifier[1],
+                                    id=identifier[2],
                                     page=wp_page))
                     continue
 
-                for page_cite in page_cites:
-                    # Loop through each citation, updating the page text
+                unique_page_cites = {tag.string for tag in page_cites}
+                for page_cite in unique_page_cites:
+                    # Loop through each unique citation, updating the page text
                     # for each - in case this identifier is cited multiple
                     # times in a lazy and/or inconsistent way.
-                    cite_str = page_cite.string
+                    cite_str = page_cite
+
+                    # Is this cite already flagged with a retraction template?
+                    if "{{Retracted" in cite_str:
+                        continue
+
                     ref_to_insert = cite_str + " " + retracted_template
 
                     page_text = page_text.replace(cite_str, ref_to_insert)
                     cites_added += 1
 
-                wp_page.text = page_text
-                edit_summary = get_edit_summary(cites_added)
+                # Only bother trying to make an edit if we changed anything
+                if page_text != wp_page.text:
+                    wp_page.text = page_text
+                    edit_summary = get_edit_summary(cites_added)
 
-                wp_page.save(edit_summary, minor=False)
-                logger.info("Successfully edited {page_name} with "
-                            "{num_sources} retracted source(s).".format(
-                                page_name=wp_page.title,
-                                num_sources=cites_added
-                            ))
+                    wp_page.save(edit_summary, minor=False)
+                    logger.info("Successfully edited {page_name} with "
+                                "{num_sources} retracted source(s).".format(
+                                    page_name=wp_page.title(),
+                                    num_sources=cites_added
+                                ))
 
 
 if __name__ == '__main__':

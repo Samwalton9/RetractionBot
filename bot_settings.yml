@@ -1,2 +1,6 @@
-en:
-  retracted_template: Retracted
+retracted_template_names:
+  en: Retracted
+
+id_template_names:
+  doi: DOI
+  pmid: PMID
