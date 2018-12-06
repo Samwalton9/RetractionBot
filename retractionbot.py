@@ -9,8 +9,6 @@ import yaml
 
 from db import load_retracted_identifiers
 
-# TODO: Replace IDs in retracted templates with the retracted DOI, not the original DOI.
-
 directory = os.path.dirname(os.path.realpath(__file__))
 
 logger = logging.getLogger(__name__)
@@ -61,21 +59,6 @@ def find_page_cites(page_text, id):
     return page_cites
 
 
-def get_edit_summary(cites_added):
-    """
-    Given a list of citations added to a page, returns a singular
-    or plural edit summary.
-    """
-    edit_summary_template = "Flagging {num_sources} as retracted."
-    if cites_added == 1:
-        edit_summary = edit_summary_template.format(
-            num_sources="1 source")
-    else:
-        edit_summary = edit_summary_template.format(
-            num_sources=str(cites_added) + " sources")
-    return edit_summary
-
-
 def run_bot():
     bot_settings = load_bot_settings()
     bot_languages = bot_settings['retracted_template_names']
@@ -102,7 +85,6 @@ def run_bot():
                                                            namespaces=[2],
                                                            site=site)
 
-            cites_added = 0
             for wp_page in page_list:
                 print(wp_page)
                 page_text = wp_page.text
@@ -130,18 +112,16 @@ def run_bot():
                     ref_to_insert = cite_str + " " + retracted_template
 
                     page_text = page_text.replace(cite_str, ref_to_insert)
-                    cites_added += 1
 
                 # Only bother trying to make an edit if we changed anything
                 if page_text != wp_page.text:
                     wp_page.text = page_text
-                    edit_summary = get_edit_summary(cites_added)
+                    edit_summary = "Flagging a cited source as retracted"
 
                     wp_page.save(edit_summary, minor=False)
                     logger.info("Successfully edited {page_name} with "
-                                "{num_sources} retracted source(s).".format(
-                                    page_name=wp_page.title(),
-                                    num_sources=cites_added
+                                "retracted source(s).".format(
+                                    page_name=wp_page.title()
                                 ))
 
 
