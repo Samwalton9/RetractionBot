@@ -16,9 +16,9 @@ logging.basicConfig(filename=os.path.join(directory, 'retractionbot.log'),
                     level=logging.INFO)
 
 
-def check_bot_killswitch(site):
+def check_bot_killswitches(site):
     """
-    Verifies that bot killswitch hasn't been edited.
+    Verifies that bot killswitch hasn't been edited, for this site or Meta.
 
     Checks User:RetractionBot/run, an openly editable page, to see if an
     editor has disabled the bot. If the page contains anything other than
@@ -29,7 +29,7 @@ def check_bot_killswitch(site):
     run_page = pywikibot.Page(site, run_page_name)
 
     if run_page.text == "yes":
-        return True
+        local_check = True
     else:
         log_text = "{run_page_name} not set to 'yes' on {lang}.wikipedia,"
         "not running.".format(
@@ -38,6 +38,23 @@ def check_bot_killswitch(site):
             )
         logger.error(log_text)
         return False
+
+    meta_site = pywikibot.Site('meta', 'meta')
+    run_meta = pywikibot.Page(meta_site, run_page_name)
+
+    if run_meta.text == "":
+        print("Meta is fine.")
+        meta_check = True
+    else:
+        log_text = "{run_page_name} not set to 'yes' on Meta,"
+        "not running.".format(
+            run_page_name=run_page_name
+            )
+        logger.error(log_text)
+        return False
+
+    if local_check and meta_check:
+        return True
 
 
 def load_bot_settings():
