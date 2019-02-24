@@ -67,10 +67,10 @@ def find_page_cites(page_text, id):
 def run_bot():
     bot_settings = load_bot_settings()
     bot_languages = bot_settings['retracted_template_names']
-    identifier_templates = bot_settings['id_template_names']
+    template_field_names = bot_settings['template_field_names']
     retracted_identifiers = load_retracted_identifiers()
 
-    template_template = '{{{{{template_name} |{{{{{id_template} |{id}}}}}}}}}'
+    template_template = '{{{{{template_name} |{{{{{id_field}={id}}}}}}}}}'
 
     for language, lang_items in bot_languages.items():
 
@@ -82,7 +82,7 @@ def run_bot():
         for identifier in retracted_identifiers:
             retracted_template = template_template.format(
                 template_name=lang_items,
-                id_template=identifier_templates[identifier[0]],
+                id_field=template_field_names[identifier[0]],
                 id=identifier[1])
 
             # TODO: Turn back to 0 when not testing in sandbox
