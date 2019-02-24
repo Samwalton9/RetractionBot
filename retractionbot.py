@@ -16,28 +16,33 @@ logging.basicConfig(filename=os.path.join(directory, 'retractionbot.log'),
                     level=logging.INFO)
 
 
-def check_bot_killswitch(site):
+def check_bot_killswitches(site):
     """
-    Verifies that bot killswitch hasn't been edited.
+    Verifies that bot killswitch hasn't been edited, for this site or Meta.
 
     Checks User:RetractionBot/run, an openly editable page, to see if an
     editor has disabled the bot. If the page contains anything other than
     "yes", don't run. Checks per-wiki.
     Returns True if bot can run, False otherwise.
     """
+    meta_site = pywikibot.Site('meta', 'meta')
     run_page_name = "User:RetractionBot/run"
-    run_page = pywikibot.Page(site, run_page_name)
 
-    if run_page.text == "yes":
-        return True
-    else:
-        log_text = "{run_page_name} not set to 'yes' on {lang}.wikipedia,"
-        "not running.".format(
-            run_page_name=run_page_name,
-            lang=site.lang
-            )
-        logger.error(log_text)
-        return False
+    for a_site in [site, meta_site]:
+        run_page = pywikibot.Page(a_site, run_page_name)
+
+        if run_page.text != "yes":
+            log_text = "{run_page_name} not set to 'yes' on {lang},"
+            "not running.".format(
+                run_page_name=run_page_name,
+                lang=a_site.lang
+                )
+            logger.error(log_text)
+            return False
+
+    # If we haven't returned False yet then everything
+    # seems to be fine, so return True.
+    return True
 
 
 def load_bot_settings():
@@ -62,22 +67,22 @@ def find_page_cites(page_text, id):
 def run_bot():
     bot_settings = load_bot_settings()
     bot_languages = bot_settings['retracted_template_names']
-    identifier_templates = bot_settings['id_template_names']
+    template_field_names = bot_settings['template_field_names']
     retracted_identifiers = load_retracted_identifiers()
 
-    template_template = '{{{{{template_name} |{{{{{id_template} |{id}}}}}}}}}'
+    template_template = '{{{{{template_name} |{id_field}={id}}}}}'
 
     for language, lang_items in bot_languages.items():
 
         site = pywikibot.Site(language, 'wikipedia')
-        bot_can_run = check_bot_killswitch(site)
+        bot_can_run = check_bot_killswitches(site)
         if not bot_can_run:
             continue
 
         for identifier in retracted_identifiers:
             retracted_template = template_template.format(
                 template_name=lang_items,
-                id_template=identifier_templates[identifier[0]],
+                id_field=template_field_names[identifier[0]],
                 id=identifier[1])
 
             # TODO: Turn back to 0 when not testing in sandbox
@@ -106,7 +111,7 @@ def run_bot():
                     cite_str = page_cite
 
                     # Is this cite already flagged with a retraction template?
-                    if "{{Retracted" in cite_str:
+                    if "{{retracted" in cite_str.lower():
                         continue
 
                     ref_to_insert = cite_str + " " + retracted_template

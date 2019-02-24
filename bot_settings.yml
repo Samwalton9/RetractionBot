@@ -1,6 +1,6 @@
 retracted_template_names:
   en: Retracted
 
-id_template_names:
-  doi: DOI
-  pmid: PMID
+template_field_names:
+  doi: doi
+  pmid: pmid
