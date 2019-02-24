@@ -25,36 +25,24 @@ def check_bot_killswitches(site):
     "yes", don't run. Checks per-wiki.
     Returns True if bot can run, False otherwise.
     """
-    run_page_name = "User:RetractionBot/run"
-    run_page = pywikibot.Page(site, run_page_name)
-
-    if run_page.text == "yes":
-        local_check = True
-    else:
-        log_text = "{run_page_name} not set to 'yes' on {lang}.wikipedia,"
-        "not running.".format(
-            run_page_name=run_page_name,
-            lang=site.lang
-            )
-        logger.error(log_text)
-        return False
-
     meta_site = pywikibot.Site('meta', 'meta')
-    run_meta = pywikibot.Page(meta_site, run_page_name)
+    run_page_name = "User:RetractionBot/run"
 
-    if run_meta.text == "":
-        print("Meta is fine.")
-        meta_check = True
-    else:
-        log_text = "{run_page_name} not set to 'yes' on Meta,"
-        "not running.".format(
-            run_page_name=run_page_name
-            )
-        logger.error(log_text)
-        return False
+    for a_site in [site, meta_site]:
+        run_page = pywikibot.Page(a_site, run_page_name)
 
-    if local_check and meta_check:
-        return True
+        if run_page.text != "yes":
+            log_text = "{run_page_name} not set to 'yes' on {lang},"
+            "not running.".format(
+                run_page_name=run_page_name,
+                lang=site.lang
+                )
+            logger.error(log_text)
+            return False
+
+    # If we haven't returned False yet then everything
+    # seems to be fine, so return True.
+    return True
 
 
 def load_bot_settings():
