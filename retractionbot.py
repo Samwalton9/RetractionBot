@@ -35,7 +35,7 @@ def check_bot_killswitches(site):
             log_text = "{run_page_name} not set to 'yes' on {lang},"
             "not running.".format(
                 run_page_name=run_page_name,
-                lang=site.lang
+                lang=a_site.lang
                 )
             logger.error(log_text)
             return False
@@ -70,7 +70,7 @@ def run_bot():
     template_field_names = bot_settings['template_field_names']
     retracted_identifiers = load_retracted_identifiers()
 
-    template_template = '{{{{{template_name} |{{{{{id_field}={id}}}}}}}}}'
+    template_template = '{{{{{template_name} |{id_field}={id}}}}}'
 
     for language, lang_items in bot_languages.items():
 
