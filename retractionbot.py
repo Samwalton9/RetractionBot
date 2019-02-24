@@ -75,7 +75,7 @@ def run_bot():
     for language, lang_items in bot_languages.items():
 
         site = pywikibot.Site(language, 'wikipedia')
-        bot_can_run = check_bot_killswitch(site)
+        bot_can_run = check_bot_killswitches(site)
         if not bot_can_run:
             continue
 
