@@ -111,7 +111,7 @@ def run_bot():
                     cite_str = page_cite
 
                     # Is this cite already flagged with a retraction template?
-                    if "{{Retracted" in cite_str:
+                    if "{{retracted" in cite_str.lower():
                         continue
 
                     ref_to_insert = cite_str + " " + retracted_template
