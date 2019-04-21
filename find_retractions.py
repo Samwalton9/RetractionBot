@@ -18,7 +18,7 @@ def get_crossref_retractions():
         ]
 
     crossref_api_url = ('https://api.crossref.org/works'
-                        '?filter=update-type:{type},from-pub-date:{date}'
+                        '?filter=update-type:{type},from-index-date:{date}'
                         '&select=DOI,update-to,indexed'
                         '&rows=1000'
                         '&offset={offset}')
