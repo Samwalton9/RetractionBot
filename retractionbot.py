@@ -79,11 +79,11 @@ def run_bot():
             continue
 
         for identifier in retracted_identifiers:
-            original_id = identifier[2].decode("utf-8")
-            retraction_id = identifier[3].decode("utf-8")
+            original_id = identifier[3].decode("utf-8")
+            retraction_id = identifier[4].decode("utf-8")
             retracted_template = template_template.format(
                 template_name=lang_items,
-                id_field=template_field_names[identifier[0].decode("utf-8")],
+                id_field=template_field_names[identifier[1].decode("utf-8")],
                 id=retraction_id)
 
             page_list = pagegenerators.SearchPageGenerator('"' + original_id + '"',
