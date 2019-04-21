@@ -58,3 +58,7 @@ def get_crossref_retractions():
 
 def get_ncbi_retractions():
     pass
+
+
+if __name__ == '__main__':
+    get_crossref_retractions()
