@@ -18,8 +18,8 @@ def get_crossref_retractions():
         ]
 
     crossref_api_url = ('https://api.crossref.org/works'
-                        '?filter=update-type:{type},from-index-date:{date}'
-                        '&select=DOI,update-to,indexed'
+                        '?filter=update-type:{type},from-pub-date:{date}'
+                        '&select=DOI,update-to,created'
                         '&rows=1000'
                         '&offset={offset}')
 
@@ -47,7 +47,7 @@ def get_crossref_retractions():
                 items_count += len(returned_items)
 
             for item in returned_items:
-                timestamp = item['indexed']['date-time']
+                timestamp = item['created']['date-time']
                 old_doi = item['update-to'][0]['DOI']
                 new_doi = item['DOI']
 
