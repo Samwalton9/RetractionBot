@@ -1,4 +1,5 @@
 CREATE TABLE `retractions` (
+  `timestamp` TIMESTAMP NOT NULL,
   `type` varbinary(10) NOT NULL,
   `origin` varbinary(20) NOT NULL,
   `original_id` varbinary(50) NOT NULL,
