@@ -8,9 +8,9 @@ db = MySQLdb.connect(host="tools.db.svc.eqiad.wmflabs",
 
 def save_retraction_to_db(timestamp, type, origin, original_id, retraction_id):
     """
-    Given a certain type of identifier (e.g. doi, pmid), its origin (e.g. crossref, pubmed)
-    and both the new (retraction) id and old (retracted) id, save this to the DB.
-    type can be 'doi' or 'pmid'
+    Given a certain type of identifier (e.g. doi, pmid), its origin
+    (e.g. crossref, pubmed) and both the new (retraction) id and old
+    (retracted) id, save this to the DB. type can be 'doi' or 'pmid'
     """
     cur = db.cursor()
     query = """

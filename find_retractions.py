@@ -9,8 +9,6 @@ def get_crossref_retractions():
     # List of crossref retraction types based on, but stricter than,
     # https://github.com/fathomlabs/crossref-retractions/blob/master/index.js
 
-    #TODO: Run regularly on CRON job on production
-
     retraction_types = [
         'removal',
         'retraction',
@@ -54,7 +52,8 @@ def get_crossref_retractions():
                 new_doi = item['DOI']
 
                 if not retracted_id_exists(new_doi):
-                    save_retraction_to_db(timestamp, 'doi', 'Crossref', old_doi, new_doi)
+                    save_retraction_to_db(timestamp, 'doi', 'Crossref',
+                                          old_doi, new_doi)
 
 
 def get_ncbi_retractions():

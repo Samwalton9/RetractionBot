@@ -86,9 +86,8 @@ def run_bot():
                 id_field=template_field_names[identifier[0].decode("utf-8")],
                 id=retraction_id)
 
-            # TODO: Turn back to 0 when not testing in sandbox
             page_list = pagegenerators.SearchPageGenerator('"' + original_id + '"',
-                                                           namespaces=[2],
+                                                           namespaces=[0],
                                                            site=site)
 
             for wp_page in page_list:
