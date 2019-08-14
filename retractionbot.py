@@ -7,7 +7,9 @@ from pywikibot import pagegenerators
 import re
 import yaml
 
-from db import load_retracted_identifiers, log_retraction_edit
+from db import (load_retracted_identifiers,
+                log_retraction_edit,
+                already_retracted)
 
 directory = os.path.dirname(os.path.realpath(__file__))
 
@@ -119,19 +121,25 @@ def run_bot():
 
                 # Only bother trying to make an edit if we changed anything
                 if page_text != wp_page.text:
-                    wp_page.text = page_text
-                    edit_summary = "Flagging a cited source as retracted"
+                    domain = language + ".wikipedia.org"
+                    # Make sure we're not edit warring
+                    if not already_retracted(original_id,
+                                             retraction_id,
+                                             domain,
+                                             wp_page):
+                        wp_page.text = page_text
+                        edit_summary = "Flagging a cited source as retracted"
 
-                    #wp_page.save(edit_summary, minor=False)
-                    logger.info("Successfully edited {page_name} with "
-                                "retracted source(s).".format(
-                                    page_name=wp_page.title()
-                                ))
-                    log_retraction_edit(datetime.datetime.now(),
-                                        language + ".wikipedia.org",
-                                        wp_page,
-                                        original_id,
-                                        retraction_id)
+                        #wp_page.save(edit_summary, minor=False)
+                        logger.info("Successfully edited {page_name} with "
+                                    "retracted source(s).".format(
+                                        page_name=wp_page.title()
+                                    ))
+                        log_retraction_edit(datetime.datetime.now(),
+                                            domain,
+                                            wp_page,
+                                            original_id,
+                                            retraction_id)
 
 
 if __name__ == '__main__':
