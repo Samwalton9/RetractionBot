@@ -98,9 +98,9 @@ def already_retracted(old_id, new_id, domain, page_title):
     query = """
         SELECT COUNT(*) FROM edit_log
         WHERE original_id = {old_id}
-        AND retraction_id = new_id
-        AND domain = '{domain}'
-        AND page_title = '{page_title}'
+        AND retraction_id = {new_id}
+        AND domain = "{domain}"
+        AND page_title = "{page_title}"
     """
     cur.execute(query.format(
         old_id=old_id,
