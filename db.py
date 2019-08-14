@@ -87,3 +87,30 @@ def log_retraction_edit(timestamp, domain, page_title, old_id, new_id):
         old_id=old_id,
         new_id=new_id
     ))
+
+
+def already_retracted(old_id, new_id, domain, page_title):
+    """
+    Given old and new IDs, a domain, and a page title, check if this edit has
+    already been made in the past so we can avoid edit warring.
+    """
+    cur = db.cursor()
+    query = """
+        SELECT COUNT(*) FROM edit_log
+        WHERE original_id = "{old_id}"
+        AND retraction_id = "{new_id}"
+        AND domain = "{domain}"
+        AND page_title = "{page_title}"
+    """
+    cur.execute(query.format(
+        old_id=old_id,
+        new_id=new_id,
+        domain=domain,
+        page_title=page_title
+    ))
+    count_result = cur.fetchone()
+
+    if count_result[0] != 0:
+        return True
+    else:
+        return False
