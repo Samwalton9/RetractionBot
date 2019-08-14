@@ -14,7 +14,6 @@ def get_crossref_retractions():
         'retraction',
         'Retraction',
         'retration',
-        'withdrawal',
         ]
 
     crossref_api_url = ('https://api.crossref.org/works'
