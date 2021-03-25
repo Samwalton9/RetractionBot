@@ -1,5 +1,5 @@
 beautifulsoup4==4.6.3
 mysqlclient==1.4.2.post1
 pywikibot==3.0.20190301
-PyYAML==4.2b1
+PyYAML==5.4
 requests==2.21.0
